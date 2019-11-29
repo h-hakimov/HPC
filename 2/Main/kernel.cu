@@ -1,12 +1,11 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-
 #include <iostream>
 #include <stdio.h>
 #include <ctime>
 #include <vector>
 #include <omp.h>
-
+#include <curand_kernel.h>
 
 using namespace std;
 
@@ -106,17 +105,70 @@ __host__ float count_pi_cpu_omp(vector<float> randX, vector<float> randY, int n)
 	return c_num;
 }
 
-int main() {
+__global__ void setup_kernel(curandState *state)
+{
+	int id = threadIdx.x + blockIdx.x * 64;
+	/* Each thread gets same seed, a different
+	sequence number, no offset */
+	curand_init(1234, id, 0, &state[id]);
+}
 
+__global__ void generate_kernel(curandState *state, float *result)
+{
+	int id = threadIdx.x + blockIdx.x * 64;
+	float rand;
+
+	/* Copy state to local memory for efficiency */
+	curandState localState = state[id];
+	/* Generate pseudo-random float */
+	rand = curand_uniform(&localState);
+
+	/* Copy state back to global memory */
+	state[id] = localState;
+	/* Store results */
+	result[id] = rand;
+}
+
+int main() {
+	
+	curandState *devStates;
+	float *devRandX, *devRandY;
+	float *hostRandX = new float[n];
+	float *hostRandY = new float[n];
 	vector<float> randX(n);
 	vector<float> randY(n);
-
+	
+	cudaMalloc( &devStates, n*sizeof( curandState ) );
+    cudaMalloc( &devRandX, n*sizeof( *hostRandX ) );
+	cudaMalloc( &devRandY, n*sizeof( *hostRandY ) );
+	
 	srand((unsigned)time(NULL));
+	/*
 	for (int i = 0; i < n; i++) {
 		randX[i] = float(rand()) / RAND_MAX;
 		randY[i] = float(rand()) / RAND_MAX;
 	}
-
+	*/
+	
+	setup_kernel <<<64, 64>>> ( devStates );
+	
+	generate_kernel <<<64, 64>>> ( devStates, devRandX );
+	cudaMemcpy( hostRandX, devRandX, n*sizeof(*hostRandX), cudaMemcpyDeviceToHost );
+	
+	generate_kernel <<<64, 64>>> ( devStates, devRandY );
+	cudaMemcpy( hostRandY, devRandY, n*sizeof(*hostRandY), cudaMemcpyDeviceToHost );
+	
+	cudaFree(devRandX);
+	cudaFree(devRandY);
+    cudaFree(devStates);
+	
+	#pragma omp parallel for
+	for (int i = 0; i < n; i++) {
+		randX[i] = hostRandX[i];
+		randY[i] = hostRandY[i];
+	}
+	
+	cout << "randX[0]= " << randX[0] << endl;
 	//start cont cpu time
 	c_start = clock();
 	int c_count = 0;
@@ -148,14 +200,13 @@ int main() {
 	cout << "time= " << t_cpu * 1000 << " ms" << endl;
 	
 	//start cont cpu_omp time
-	c_start = clock();
+	double dtime = omp_get_wtime();
 	c_num = count_pi_cpu_omp(randX, randY, n);
 	//end cont cpu_omp time
-	c_end = clock();
-	t_cpu = (float)(c_end - c_start) / CLOCKS_PER_SEC;
+	dtime = omp_get_wtime() - dtime;
 	cout << "CPU_OMP Time" << endl;
 	cout << c_num << endl;
-	cout << "time= " << t_cpu * 1000 << " ms" << endl;
+	cout << "time= " << dtime * 1000 << " ms" << endl;
 
 
 	//start cont gpu time

@@ -257,7 +257,7 @@ return: none
 */
 int main(int argc, char const *argv[])
 {
-	int size = 2000;
+	int size = 1000;
     int m = size;
 	int n = size;
 	int k = size;
@@ -334,23 +334,22 @@ int main(int argc, char const *argv[])
     printf("Time elapsed on matrix multiplication of %dx%d . %dx%d on GPU: %f ms.\n\n", m, n, n, k, gpu_elapsed_time_ms);
 
     // start the CPU_OMP version
-    clock_t begin = clock();
+    double dtime = omp_get_wtime();
 
     //cpu_matrix_mult(h_a, h_b, h_cc, m, n, k);
     omp_mm(h_a, m, n, h_b, n, k, h_cc);
 
-    clock_t end = clock();
-    double time_spent = (double)1000*(end - begin) / CLOCKS_PER_SEC;
-    printf("Time elapsed on matrix multiplication of %dx%d . %dx%d on CPU OMP: %f ms.\n\n", m, n, n, k, time_spent);
+    dtime = omp_get_wtime() - dtime;
+    printf("Time elapsed on matrix multiplication of %dx%d . %dx%d on CPU OMP: %f ms.\n\n", m, n, n, k, dtime);
 	
 	// start the CPU version
-    begin = clock();
+    clock_t begin = clock();
 
     //cpu_matrix_mult(h_a, h_b, h_cc, m, n, k);
     cpu_matrix_mult(h_a, h_b, h_cc, m, n, k);
 
-    end = clock();
-    time_spent = (double)1000*(end - begin) / CLOCKS_PER_SEC;
+    clock_t end = clock();
+    double time_spent = (double)1000*(end - begin) / CLOCKS_PER_SEC;
     printf("Time elapsed on matrix multiplication of %dx%d . %dx%d on CPU: %f ms.\n\n", m, n, n, k, time_spent);
 
     // validate results computed by GPU

@@ -9,8 +9,7 @@
 #include "Bitmap.h"
 #define TILE_SIZE 4 
 
-const int window_size = WINDOW_SIZE;
-#define ITERATIONS ( 1 )
+#define ITERATIONS ( 2 )
 
 int CompareBitmaps( Bitmap* inputA, Bitmap* inputB ){
 	int differentpixels = 0; //Initializing the diffrerce Variable.
@@ -250,7 +249,7 @@ int main()
 	cpu_start = clock(); //Stat the clock
 	for (int i = 0; i < ITERATIONS; i++)
 	{
-		MedianFilterCPU(originalImage, resultImageCPU);
+		MedianFilterCPU(resultImageCPU, resultImageCPU);
 	}
 	end = clock();
 	tcpu = ((float)(end-cpu_start) + 1) * 1000 / (float)CLOCKS_PER_SEC/ITERATIONS;
@@ -269,8 +268,8 @@ int main()
 		MedianFilterGPU(originalImage, resultImageSharedGPU, true); //GPU call for median Filtering with shared Kernel.
 	}
 
-	resultImageCPU->Save("Lab/image22_cpu.bmp");
-	resultImageGPU->Save("Lab/image22_gpu.bmp");
-	resultImageSharedGPU->Save("Lab/image22_shared.bmp");
+	resultImageCPU->Save("Lab/image225_cpu.bmp");
+	resultImageGPU->Save("Lab/image225_gpu.bmp");
+	resultImageSharedGPU->Save("Lab/image225_shared.bmp");
 	
 }
