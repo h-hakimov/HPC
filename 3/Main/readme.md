@@ -10,3 +10,5 @@ Here is some results of running this application on Intel Xeon 1650v3 and NVIDIA
 | GPU (ms) | 0.2 |
 | Acceleration | 75 |
 
+
+![image](https://github.com/h-hakimov/HPC/blob/ref/3/Main/Lab/Show.bmp)
