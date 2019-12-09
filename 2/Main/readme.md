@@ -4,7 +4,7 @@ Here is some results of running this application on Intel Xeon 1650v3 and NVIDIA
 
 Results of 1024*1024*2 points
 
-| Size | time |
+|  | time |
 | --- | --- |
 | CPU (ms) | 33 |
 | GPU (ms) | 4 |
