@@ -1,0 +1,1 @@
+nvcc kernel.cu -Xcompiler /openmp

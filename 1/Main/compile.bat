@@ -1,0 +1,1 @@
+nvcc mm.cu -Xcompiler /openmp
